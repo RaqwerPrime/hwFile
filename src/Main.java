@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Main {
@@ -75,6 +76,11 @@ public class Main {
         zipFiles("D://Games//savegames//save.zip", saveFilesPath);
         deleteFiles(saveFilesPath);
 
+        openZip("D://Games//savegames//save.zip", "D://Games//savegames");
+        openProgress("D://Games/savegames//save1.dat");
+        openProgress("D://Games/savegames//save2.dat");
+        openProgress("D://Games/savegames//save3.dat");
+
     }
 
     public static void saveGames(String saveFilesPath, GameProgress gameProgress) {
@@ -122,5 +128,44 @@ public class Main {
             }
 
         }
+    }
+
+    public static void openZip(String pathZipArchive, String pathSaveUnpacking) {
+        try (ZipInputStream zin = new ZipInputStream(new FileInputStream(pathZipArchive))) {
+            ZipEntry entry = zin.getNextEntry();
+
+            while (entry != null) {
+                String path = pathSaveUnpacking + "/" + entry.getName();
+                File file = new File(path);
+                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                byte[] bytes = new byte[8192];
+                int read;
+                while ((read = zin.read(bytes)) != -1) {
+                    bos.write(bytes, 0, read);
+                }
+                bos.close();
+                zin.closeEntry();
+                entry = zin.getNextEntry();
+
+            }
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void openProgress(String openSaveFiles) {
+
+        try (FileInputStream fis = new FileInputStream(openSaveFiles);
+             ObjectInputStream ois = new ObjectInputStream(fis)) {
+            GameProgress gameProgress = (GameProgress) ois.readObject();
+            System.out.println(gameProgress);
+
+
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
     }
 }
